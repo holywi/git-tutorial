@@ -1,0 +1,169 @@
+---
+
+cidr_networks:
+  management: 172.16.236.0/22
+  tunnel: 172.16.244.0/22
+  storage: 172.16.240.0/22
+
+used_ips:
+  - "172.16.236.1,172.16.236.50"
+  - "172.16.240.1,172.16.240.50"
+  - "172.16.244.1,172.16.244.50"
+
+global_overrides:
+
+  internal_lb_vip_address: 172.16.236.9
+  external_lb_vip_address: 10.2.46.70
+
+  management_bridge: "br-mgmt"
+
+  provider_networks:
+    - network:
+        container_bridge: "br-mgmt"
+        container_type: "veth"
+        container_interface: "eth1"
+        ip_from_q: "management"
+        type: "raw"
+        group_binds:
+          - all_containers
+          - hosts
+        is_management_address: true
+    - network:
+        container_bridge: "br-vxlan"
+        container_type: "veth"
+        container_interface: "eth10"
+        ip_from_q: "tunnel"
+        type: "geneve"
+        range: "1:1000"
+        net_name: "geneve"
+        group_binds:
+          - neutron_ovn_controller
+    - network:
+        container_bridge: "br-vlan"
+        container_type: "veth"
+        container_interface: "eth12"
+        host_bind_override: "eth12"
+        type: "flat"
+        net_name: "physnet1"
+        group_binds:
+          - neutron_ovn_controller
+    - network:
+        container_bridge: "br-vlan"
+        container_type: "veth"
+        container_interface: "eth11"
+        type: "vlan"
+        range: "101:200,301:400"
+        net_name: "physnet2"
+        group_binds:
+          - neutron_ovn_controller
+    - network:
+        container_bridge: "br-storage"
+        container_type: "veth"
+        container_interface: "eth2"
+        ip_from_q: "storage"
+        type: "raw"
+        group_binds:
+          - glance_api
+          - cinder_api
+          - cinder_volume
+          - nova_compute
+
+shared-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+repo-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+load_balancer_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+identity_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+storage-infra_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+storage_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+compute-infra_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+compute_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+placement-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+orchestration_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+dashboard_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+network-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+network-northd_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+network-gateway_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
