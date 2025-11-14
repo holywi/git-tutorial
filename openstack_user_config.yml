@@ -2,8 +2,9 @@
 
 cidr_networks:
   management: 172.16.236.0/22
-  tunnel: 172.16.244.0/22
   storage: 172.16.240.0/22
+  tunnel: 172.16.244.0/22
+
 
 used_ips:
   - "172.16.236.1,172.16.236.50"
@@ -28,6 +29,18 @@ global_overrides:
           - all_containers
           - hosts
         is_management_address: true
+    - network:
+        container_bridge: "br-storage"
+        container_type: "veth"
+        container_interface: "eth2"
+        ip_from_q: "storage"
+        type: "raw"
+        container_mtu: "9000"
+        group_binds:
+          - glance_api
+          - cinder_api
+          - cinder_volume
+          - nova_compute
     - network:
         container_bridge: "br-vxlan"
         container_type: "veth"
@@ -56,19 +69,14 @@ global_overrides:
         net_name: "physnet2"
         group_binds:
           - neutron_ovn_controller
-    - network:
-        container_bridge: "br-storage"
-        container_type: "veth"
-        container_interface: "eth2"
-        ip_from_q: "storage"
-        type: "raw"
-        group_binds:
-          - glance_api
-          - cinder_api
-          - cinder_volume
-          - nova_compute
 
 shared-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+coordination_hosts:
   infra1:
     ip: 172.16.236.11
   infra2:
@@ -85,10 +93,6 @@ load_balancer_hosts:
     ip: 172.16.236.11
   infra2:
     ip: 172.16.236.12
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
 
 identity_hosts:
   infra1:
@@ -97,30 +101,38 @@ identity_hosts:
     ip: 172.16.236.12
 
 storage-infra_hosts:
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
 
-storage_hosts:
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
-
-compute-infra_hosts:
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
-
-compute_hosts:
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
+image_hosts:
+  infra1:
+    ip: 172.16.236.11
+    container_vars:
+      limit_container_types: glance
+      glance_remote_client:
+        - what: "172.16.240.13:/images"
+          where: "/var/lib/glance/images"
+          type: "nfs"
+          options: "_netdev,auto"
+  infra2:
+    ip: 172.16.236.12
+    container_vars:
+      limit_container_types: glance
+      glance_remote_client:
+        - what: "172.16.240.14:/images"
+          where: "/var/lib/glance/images"
+          type: "nfs"
+          options: "_netdev,auto"
 
 placement-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+compute-infra_hosts:
   infra1:
     ip: 172.16.236.11
   infra2:
@@ -143,10 +155,6 @@ network-infra_hosts:
     ip: 172.16.236.11
   infra2:
     ip: 172.16.236.12
-  compute1:
-    ip: 172.16.236.13
-  compute2:
-    ip: 172.16.236.14
 
 network-northd_hosts:
   infra1:
@@ -167,3 +175,56 @@ network-gateway_hosts:
     ip: 172.16.236.13
   compute2:
     ip: 172.16.236.14
+
+metering-infra_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+metering-alarm_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+  
+metrics_hosts:
+  infra1:
+    ip: 172.16.236.11
+  infra2:
+    ip: 172.16.236.12
+
+compute_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+metering-compute_hosts:
+  compute1:
+    ip: 172.16.236.13
+  compute2:
+    ip: 172.16.236.14
+
+storage_hosts:
+  compute1:
+    ip: 172.16.236.13
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+        nfs_volume:
+          volume_backend_name: NFS_VOLUME1
+          volume_driver: cinder.volume.drivers.nfs.NfsDriver
+          nfs_mount_options: "rsize=65535,wsize=65535,timeo=1200,actimeo=120"
+          nfs_shares_config: /etc/cinder/nfs_shares
+
+  compute2:
+    ip: 172.16.236.14
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+        nfs_volume:
+          volume_backend_name: NFS_VOLUME1
+          volume_driver: cinder.volume.drivers.nfs.NfsDriver
+          nfs_mount_options: "rsize=65535,wsize=65535,timeo=1200,actimeo=120"
+          nfs_shares_config: /etc/cinder/nfs_shares
